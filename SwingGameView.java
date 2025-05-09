@@ -32,11 +32,9 @@ public class SwingGameView extends JFrame implements GameView {
             throwButtonPanel = new JPanel();
             for (YutResult res : YutResult.values()) {
                 JButton btn = new JButton(res.name());
-                btn.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        if (controller != null) {
-                            controller.handleSpecifiedThrow(res);
-                        }
+                btn.addActionListener(e -> {
+                    if (controller != null) {
+                        controller.handleSpecifiedThrow(res);
                     }
                 });
                 throwButtonPanel.add(btn);
@@ -45,11 +43,9 @@ public class SwingGameView extends JFrame implements GameView {
         } else {
             // 실제 모드: 랜덤 윷 던지기 버튼 생성
             JButton randomThrowButton = new JButton("랜덤 윷 던지기");
-            randomThrowButton.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    if (controller != null) {
-                        controller.handleRandomThrow();
-                    }
+            randomThrowButton.addActionListener(e -> {
+                if (controller != null) {
+                    controller.handleRandomThrow();
                 }
             });
             controlPanel.add(randomThrowButton, BorderLayout.CENTER);
@@ -57,11 +53,9 @@ public class SwingGameView extends JFrame implements GameView {
 
         // 두 모드 모두에 'Apply Moves' 버튼 추가
         JButton applyMovesButton = new JButton("Apply Moves");
-        applyMovesButton.addActionListener(new ActionListener(){
-            public void actionPerformed(ActionEvent e) {
-                if (controller != null) {
-                    controller.applyPendingResults();
-                }
+        applyMovesButton.addActionListener(e -> {
+            if (controller != null) {
+                controller.applyPendingResults();
             }
         });
         controlPanel.add(applyMovesButton, BorderLayout.SOUTH);
@@ -85,5 +79,14 @@ public class SwingGameView extends JFrame implements GameView {
     @Override
     public void setController(GameController controller) {
         this.controller = controller;
+    }
+
+
+    @Override
+    public void resetBoard() {
+        // 상태 레이블 초기화
+        statusLabel.setText("게임 시작!");
+        // 보드 패널 다시 그리기
+        boardPanel.refresh();
     }
 }
