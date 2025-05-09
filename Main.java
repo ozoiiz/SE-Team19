@@ -51,13 +51,12 @@ public class Main {
             game.addPlayer(new Player(playerName, pieceCount, colors[i]));
         }
 
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                SwingGameView view = new SwingGameView(board, game, testMode);
-                GameController controller = new GameController(game, view);
-                view.setVisible(true);
-                controller.startGame();
-            }
+        SwingUtilities.invokeLater(() -> {
+            SwingGameView view = new SwingGameView(board, game, testMode);
+            GameController controller = new GameController(game, view);
+            view.setVisible(true);
+            controller.startGame();
         });
+
     }
 }
