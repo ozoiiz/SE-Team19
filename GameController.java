@@ -27,17 +27,23 @@ public class GameController {
         pendingResults.add(res);
         controllerView.showMessage(model.getCurrentPlayer().getName() + "의 턴: "
                 + res.name() + " 획득. 누적 결과: " + pendingResults);
+        if (!res.hasExtraThrow()) {
+            applyPendingResults();
+        }
+
     }
 
     // 실제 모드: 랜덤 윷 던지기 버튼 클릭 시 호출됩니다.
     public void handleRandomThrow() {
         YutResult res = model.getYutThrower().throwYut();
         pendingResults.add(res);
-        controllerView.showMessage(model.getCurrentPlayer().getName() + "의 랜덤 던지기 결과: " + res.name());
+        controllerView.showMessage(model.getCurrentPlayer().getName() + "의 랜덤 결과: " + res.name());
+        if (!res.hasExtraThrow()) {
+            applyPendingResults();
+        }
     }
 
     // 'Apply Moves' 버튼 클릭 시 누적된 결과들을 적용합니다.
-    // extra throw(윷, 모)가 있는 경우 추가 던지기가 모두 끝난 후 한 번에 순서를 결정합니다.
     public void applyPendingResults() {
         Player current = model.getCurrentPlayer();
         YutResult lastResult = null;
@@ -56,15 +62,16 @@ public class GameController {
         }
 
         if (extraExists) {
-            // extra throw가 나온 경우, 추가 던지기가 끝난 후 누적 결과의 적용 순서를 입력받음
+            // extra throw가 나온 경우, 추가 던지기가 끝난 후 순서 결정 및 적용
             StringBuilder resultList = new StringBuilder();
             for (int i = 0; i < pendingResults.size(); i++) {
                 resultList.append((i + 1) + ":" + pendingResults.get(i).name() + "  ");
             }
             String orderStr = JOptionPane.showInputDialog(null,
-                    current.getName() + "님, 추가 던지기가 종료되었습니다.\n아래 결과의 적용 순서를 원하는 대로 입력하세요.\n" +
+                    current.getName() + "님, 추가 던지기가 종료되었습니다.\n" +
+                            "아래 결과의 적용 순서를 원하는 대로 입력하세요.\n" +
                             resultList.toString() + "\n예: 2,1,3 (쉼표로 구분)");
-            String[] parts = orderStr.split(",");
+            String[] parts = orderStr != null ? orderStr.split(",") : new String[0];
             List<YutResult> orderedResults = new ArrayList<>();
             for (String part : parts) {
                 try {
@@ -77,25 +84,19 @@ public class GameController {
                 }
             }
             if (orderedResults.size() != pendingResults.size()) {
-                // 올바르지 않으면 FIFO 순서대로 적용
                 orderedResults = new ArrayList<>(pendingResults);
             }
             pendingResults.clear();
-            // 선택한 순서대로 각 결과를 적용
+
             for (YutResult res : orderedResults) {
                 int pieceIndex = promptForValidPiece(current, res);
-                if (pieceIndex == -1)
-                    continue; // 올바른 입력이 없으면 해당 결과 무시
-                current.movePiece(pieceIndex, res, model.getBoard().getTotalCells(), model.getBoard());
+                if (pieceIndex == -1) continue;
+                current.movePiece(pieceIndex, res,
+                        model.getBoard().getTotalCells(), model.getBoard());
                 Piece movedPiece = current.getPieces().get(pieceIndex);
-                // 변경된 부분: checkAndApplyCapture() 대신 processPieceLanding() 호출하여 그룹핑 및 캡처 처리
                 model.processPieceLanding(movedPiece, current);
                 controllerView.updateBoard(model);
-                if (model.checkWinCondition()) {
-                    Player winner = model.getWinner();
-                    controllerView.showMessage("승리! " + winner.getName() + "님이 모든 말을 완주했습니다.");
-                    return;
-                }
+                if (handleWinIfNeeded()) return;
                 lastResult = res;
             }
         } else {
@@ -104,18 +105,13 @@ public class GameController {
                 YutResult res = pendingResults.remove(0);
                 lastResult = res;
                 int pieceIndex = promptForValidPiece(current, res);
-                if (pieceIndex == -1)
-                    continue;
-                current.movePiece(pieceIndex, res, model.getBoard().getTotalCells(), model.getBoard());
+                if (pieceIndex == -1) continue;
+                current.movePiece(pieceIndex, res,
+                        model.getBoard().getTotalCells(), model.getBoard());
                 Piece movedPiece = current.getPieces().get(pieceIndex);
-                // 변경된 부분: processPieceLanding() 호출
                 model.processPieceLanding(movedPiece, current);
                 controllerView.updateBoard(model);
-                if (model.checkWinCondition()) {
-                    Player winner = model.getWinner();
-                    controllerView.showMessage("승리! " + winner.getName() + "님이 모든 말을 완주했습니다.");
-                    return;
-                }
+                if (handleWinIfNeeded()) return;
             }
         }
 
@@ -128,15 +124,40 @@ public class GameController {
         }
     }
 
-    /*
-     사용자에게 결과 res를 적용할 말을 선택하도록 요청합니다.
-     만약 선택한 말이 이미 finish 상태이면 오류 메시지를 출력하고 재입력을 요청합니다.
+    /**
+     * 승리 조건을 확인하고, 승리 시 재시작/종료 다이얼로그를 띄운 뒤 처리합니다.
+     */
+    private boolean handleWinIfNeeded() {
+        if (!model.checkWinCondition()) return false;
+        Player winner = model.getWinner();
+        int choice = JOptionPane.showOptionDialog(
+                null,
+                winner.getName() + "님이 승리했습니다.\n게임을 다시 시작하시겠습니까?",
+                "게임 종료",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                new String[]{"다시 시작", "종료"},
+                "다시 시작"
+        );
+        if (choice == JOptionPane.YES_OPTION) {
+            model.reset();
+            controllerView.resetBoard();
+            startGame();
+        } else {
+            System.exit(0);
+        }
+        return true;
+    }
+
+    /**
+     * 사용자에게 결과를 적용할 말을 선택하도록 요청합니다.
      */
     private int promptForValidPiece(Player current, YutResult res) {
         while (true) {
             String input = JOptionPane.showInputDialog(null,
                     current.getName() + "님, 결과 " + res.name() + "을 적용할 말 번호를 선택하세요 (1-"
-                            + current.getPieces().size() + "):");
+                            + current.getPieces().size() + " ): ");
             if (input == null) {
                 controllerView.showMessage("입력이 취소되었습니다.");
                 return -1;
