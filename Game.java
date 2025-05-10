@@ -1,4 +1,3 @@
-// Game.java
 package com.example.yutgame;
 
 import java.util.ArrayList;
@@ -75,8 +74,11 @@ public class Game {
      * 이동한 말(movedPiece)이 위치한 칸을 기준
      * 같은 플레이어의 말이 같은 위치에 있으면 그룹핑(groupWith)을 적용
      * 다른 플레이어의 말이 같은 위치에 있으면 캡처(capture)를 적용
+     * @return 캡처가 발생했으면 true, 아니면 false
      */
-    public void processPieceLanding(Piece movedPiece, Player currentPlayer) {
+    public boolean processPieceLanding(Piece movedPiece, Player currentPlayer) {
+        boolean captureOccurred = false;
+        // 같은 플레이어 그룹핑
         for (Piece piece : currentPlayer.getPieces()) {
             if (piece != movedPiece && !piece.isFinished() && piece.getPosition() != 0) {
                 if (piece.getPosition() == movedPiece.getPosition()) {
@@ -90,16 +92,19 @@ public class Game {
                 piece.setPosition(commonPos);
             }
         }
+        // 타 플레이어 캡처 처리
         for (Player opponent : players) {
             if (!opponent.equals(currentPlayer)) {
                 for (Piece op : opponent.getPieces()) {
-                    if (!op.isFinished() && op.getPosition() != 0 &&
-                            op.getPosition() == movedPiece.getPosition()) {
+                    if (!op.isFinished() && op.getPosition() != 0
+                            && op.getPosition() == movedPiece.getPosition()) {
                         movedPiece.capture(op);
+                        captureOccurred = true;
                     }
                 }
             }
         }
+        // 완주된 말 그룹 처리
         if (movedPiece.isFinished()) {
             int finishPos = movedPiece.getPosition();
             for (Piece p : currentPlayer.getPieces()) {
@@ -109,6 +114,7 @@ public class Game {
                 }
             }
         }
+        return captureOccurred;
     }
 
     /**
