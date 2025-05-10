@@ -266,7 +266,7 @@ public class BoardPanel extends JPanel {
                 g2.drawOval(p.x - cellSize/2, p.y - cellSize/2, cellSize, cellSize);
             }
             g2.setColor(Color.BLACK);
-            g2.drawString(String.valueOf(i), p.x - 5, p.y + 5);
+           // g2.drawString(String.valueOf(i), p.x - 5, p.y + 5);
         }
 
         // 말 그리기
