@@ -1,4 +1,4 @@
-package com.example.yutgame;
+package com.example.javafxyut;
 
 public enum BoardShape {
     SQUARE,
