@@ -1,4 +1,4 @@
-package com.example.yutgame;
+package com.example.javafxyut;
 
 public class Board {
     private BoardShape shape;
