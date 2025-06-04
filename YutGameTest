@@ -1,0 +1,1276 @@
+package com.example.javafxyut;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import static org.junit.jupiter.api.Assertions.*;
+import java.awt.Color;
+
+public class YutGameTest {
+
+    private Player player1;
+    private Player player2;
+    private Player player3;
+    private Player player4;
+
+    @BeforeEach
+    void setUp() {
+
+        player1 = new Player("플레이어1", 4, Color.RED);
+        player2 = new Player("플레이어2", 4, Color.BLUE);
+        player3 = new Player("플레이어3", 4, Color.GREEN);
+        player4 = new Player("플레이어4", 4, Color.YELLOW);
+
+
+    }
+
+    @Nested
+    @DisplayName("단일 이동 테스트")
+    class SingleMovementTest {
+
+        @Test
+        @DisplayName("BACK DO(-1칸) 이동 테스트: 2번째 칸에서 -1칸 이동 후 위치 확인, 추가 던지기 없음")
+        void testBackDoMovement() {
+            Board board = new Board(BoardShape.SQUARE);
+            Piece piece = new Piece();
+
+            piece.move(YutResult.GAE.getMove(), board);
+            piece.move(YutResult.BACKDO.getMove(), board);
+            assertEquals(1, piece.getPosition(), "GAE - BACK DO 이동 후 위치는 1이어야 함");
+            assertFalse(piece.isFinished(), " 완주되지 않아야 함");
+            assertFalse(YutResult.DO.hasExtraThrow(), "BACK DO는 추가 던지기 없음");
+        }
+
+
+        @Test
+        @DisplayName("DO(1칸) 이동 테스트: 시작점에서 1칸 이동 후 위치 확인, 추가 던지기 없음")
+        void testDoMovement() {
+            Board board = new Board(BoardShape.SQUARE);
+            Piece piece = new Piece();
+
+            piece.move(YutResult.DO.getMove(), board);
+            assertEquals(1, piece.getPosition(), "DO 이동 후 위치는 1이어야 함");
+            assertFalse(piece.isFinished(), "1칸 이동으로는 완주되지 않아야 함");
+            assertFalse(YutResult.DO.hasExtraThrow(), "DO는 추가 던지기 없음");
+        }
+
+        @Test
+        @DisplayName("GAE(2칸) 이동 테스트: 시작점에서 2칸 이동 후 위치 확인, 추가 던지기 없음")
+        void testGaeMovement() {
+            Board board = new Board(BoardShape.SQUARE);
+            Piece piece = new Piece();
+
+            piece.move(YutResult.GAE.getMove(), board);
+            assertEquals(2, piece.getPosition(), "GAE 이동 후 위치는 2이어야 함");
+            assertFalse(piece.isFinished(), "2칸 이동으로는 완주되지 않아야 함");
+            assertFalse(YutResult.GAE.hasExtraThrow(), "GAE는 추가 던지기 없음");
+        }
+
+        @Test
+        @DisplayName("GEOL(3칸) 이동 테스트: 시작점에서 3칸 이동 후 위치 확인, 추가 던지기 없음")
+        void testGeolMovement() {
+            Board board = new Board(BoardShape.SQUARE);
+            Piece piece = new Piece();
+
+            piece.move(YutResult.GEOL.getMove(), board);
+            assertEquals(3, piece.getPosition(), "GEOL 이동 후 위치는 3이어야 함");
+            assertFalse(piece.isFinished(), "3칸 이동으로는 완주되지 않아야 함");
+            assertFalse(YutResult.GEOL.hasExtraThrow(), "GEOL은 추가 던지기 없음");
+        }
+
+        @Test
+        @DisplayName("YUT(4칸) 이동 테스트: 시작점에서 4칸 이동 후 위치 확인, 추가 던지기 있음")
+        void testYutMovement() {
+            Board board = new Board(BoardShape.SQUARE);
+            Piece piece = new Piece();
+
+            piece.move(YutResult.YUT.getMove(), board);
+            assertEquals(4, piece.getPosition(), "YUT 이동 후 위치는 4이어야 함");
+            assertFalse(piece.isFinished(), "4칸 이동으로는 완주되지 않아야 함");
+            assertTrue(YutResult.YUT.hasExtraThrow(), "YUT은 추가 던지기 있음");
+        }
+
+        @Test
+        @DisplayName("MO(5칸) 이동 테스트: 시작점에서 5칸 이동 후 위치 확인, 추가 던지기 있음")
+        void testMoMovement() {
+            Board board = new Board(BoardShape.SQUARE);
+            Piece piece = new Piece();
+
+            piece.move(YutResult.MO.getMove(), board);
+            assertEquals(5, piece.getPosition(), "MO 이동 후 위치는 5이어야 함");
+            assertFalse(piece.isFinished(), "5칸 이동으로는 완주되지 않아야 함");
+            assertTrue(YutResult.MO.hasExtraThrow(), "MO는 추가 던지기 있음");
+        }
+
+
+        @Test
+        @DisplayName("확률 분포: 각 결과의 생성 확률 기본 검증")
+        void testProbabilityDistribution() {
+            YutThrower thrower = new YutThrower();
+            int[] counts = new int[YutResult.values().length];
+            int totalThrows = 1600;
+
+            for (int i = 0; i < totalThrows; i++) {
+                YutResult result = thrower.throwYut();
+                for (int j = 0; j < YutResult.values().length; j++) {
+                    if (result == YutResult.values()[j]) {
+                        counts[j]++;
+                        break;
+                    }
+                }
+            }
+
+            // 각 결과의 생성 빈도 출력
+            for (int i = 0; i < YutResult.values().length; i++) {
+                double percentage = (counts[i] * 100.0) / totalThrows;
+                System.out.println(YutResult.values()[i].name() + ": " +
+                        counts[i] + "번 (" + String.format("%.1f", percentage) + "%)");
+                assertTrue(counts[i] > 0, YutResult.values()[i].name() + " 최소 1회 생성");
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("백도 테스트")
+    class BackdoTest {
+
+        @Test
+        @DisplayName("시작점에서 백도: 위치 0에서 BACKDO 시 이동하지 않음 확인")
+        void testBackdoAtStartPosition() {
+            Board board = new Board(BoardShape.SQUARE);
+            Piece piece = new Piece();
+
+            piece.move(YutResult.BACKDO.getMove(), board);
+            assertEquals(0, piece.getPosition(), "시작점에서 백도 시 위치 변화 없어야 함");
+            assertFalse(piece.isFinished(), "시작점 백도로는 완주되지 않아야 함");
+        }
+
+        @Test
+        @DisplayName("DO → BACKDO 완주: 1칸 전진 후 1칸 후퇴로 완주")
+        void testDoBackdoCompletion() {
+            Board board = new Board(BoardShape.SQUARE);
+            Piece piece = new Piece();
+
+            piece.move(YutResult.DO.getMove(), board);
+            assertEquals(1, piece.getPosition(), "DO 이동 후 위치는 1이어야 함");
+            assertFalse(piece.isFinished(), "DO 이동으로는 완주되지 않아야 함");
+
+            piece.move(YutResult.BACKDO.getMove(), board);
+            assertTrue(piece.isFinished(), "DO→BACKDO 조합으로 완주되어야 함");
+            assertEquals(0, piece.getPosition(), "완주 시 위치는 0이어야 함");
+        }
+
+        @Test
+        @DisplayName("GAE → BACKDO → BACKDO: 2칸 전진 후 2번 후퇴")
+        void testGaeBackdoBackdo() {
+            Board board = new Board(BoardShape.SQUARE);
+            Piece piece = new Piece();
+
+            piece.move(YutResult.GAE.getMove(), board);
+            assertEquals(2, piece.getPosition(), "GAE 이동 후 위치는 2이어야 함");
+
+            piece.move(YutResult.BACKDO.getMove(), board);
+            assertEquals(1, piece.getPosition(), "첫 번째 백도 후 위치는 1이어야 함");
+            assertFalse(piece.isFinished(), "첫 번째 백도로는 완주되지 않아야 함");
+
+            piece.move(YutResult.BACKDO.getMove(), board);
+            assertEquals(0, piece.getPosition(), "두 번째 백도 후 위치는 0이어야 함");
+            assertFalse(piece.isFinished(), "GAE→BACKDO→BACKDO는 완주되지 않아야 함");
+        }
+
+
+
+    @Nested
+    @DisplayName("CENTER 경로 이동 테스트")
+    class CenterRouteTest {
+
+    }
+        @Nested
+        @DisplayName("CENTER 경로 단계별 이동")
+        class CenterRouteStepTest {
+
+            @Test
+            @DisplayName("1단계: 첫 번째 분기 셀 도달")
+            void testCenterRoute1stStep() {
+                // 사각형 보드
+                Board squareBoard = new Board(BoardShape.SQUARE);
+                Piece squarePiece = new Piece();
+                squarePiece.move(YutResult.MO.getMove(), squareBoard); // 5번 꼭짓점
+                squarePiece.move(YutResult.DO.getMove(), squareBoard); // CENTER 1단계
+                assertEquals(22, squarePiece.getPosition(), "사각형 보드 5번 꼭짓점에서 CENTER 1단계");
+
+                // 오각형 보드
+                Board pentagonBoard = new Board(BoardShape.PENTAGON);
+                Piece pentagonPiece = new Piece();
+                pentagonPiece.move(YutResult.MO.getMove(), pentagonBoard); // 5번 꼭짓점
+                pentagonPiece.move(YutResult.DO.getMove(), pentagonBoard); // CENTER 1단계
+                assertEquals(27, pentagonPiece.getPosition(), "오각형 보드 5번 꼭짓점에서 CENTER 1단계");
+
+                // 육각형 보드
+                Board hexagonBoard = new Board(BoardShape.HEXAGON);
+                Piece hexagonPiece = new Piece();
+                hexagonPiece.move(YutResult.MO.getMove(), hexagonBoard); // 5번 꼭짓점
+                hexagonPiece.move(YutResult.DO.getMove(), hexagonBoard); // CENTER 1단계
+                assertEquals(32, hexagonPiece.getPosition(), "육각형 보드 5번 꼭짓점에서 CENTER 1단계");
+            }
+
+            @Test
+            @DisplayName("2단계: 두 번째 분기 셀 도달")
+            void testCenterRoute2ndStep() {
+                // 사각형 보드
+                Board squareBoard = new Board(BoardShape.SQUARE);
+                Piece squarePiece = new Piece();
+                squarePiece.move(YutResult.MO.getMove(), squareBoard); // 5번 꼭짓점
+                squarePiece.move(YutResult.GAE.getMove(), squareBoard); // CENTER 2단계
+                assertEquals(23, squarePiece.getPosition(), "사각형 보드 5번 꼭짓점에서 CENTER 2단계");
+
+                // 오각형 보드
+                Board pentagonBoard = new Board(BoardShape.PENTAGON);
+                Piece pentagonPiece = new Piece();
+                pentagonPiece.move(YutResult.MO.getMove(), pentagonBoard); // 5번 꼭짓점
+                pentagonPiece.move(YutResult.GAE.getMove(), pentagonBoard); // CENTER 2단계
+                assertEquals(28, pentagonPiece.getPosition(), "오각형 보드 5번 꼭짓점에서 CENTER 2단계");
+
+                // 육각형 보드
+                Board hexagonBoard = new Board(BoardShape.HEXAGON);
+                Piece hexagonPiece = new Piece();
+                hexagonPiece.move(YutResult.MO.getMove(), hexagonBoard); // 5번 꼭짓점
+                hexagonPiece.move(YutResult.GAE.getMove(), hexagonBoard); // CENTER 2단계
+                assertEquals(33, hexagonPiece.getPosition(), "육각형 보드 5번 꼭짓점에서 CENTER 2단계");
+            }
+
+            @Test
+            @DisplayName("3단계: 중앙 셀 도달 (FINAL 경로 전환)")
+            void testCenterRoute3rdStep() {
+                // 사각형 보드
+                Board squareBoard = new Board(BoardShape.SQUARE);
+                Piece squarePiece = new Piece();
+                squarePiece.move(YutResult.MO.getMove(), squareBoard); // 5번 꼭짓점
+                squarePiece.move(YutResult.GEOL.getMove(), squareBoard); // CENTER 3단계 (중앙)
+                assertEquals(28, squarePiece.getPosition(), "사각형 보드 중앙 셀 위치");
+
+                // 오각형 보드
+                Board pentagonBoard = new Board(BoardShape.PENTAGON);
+                Piece pentagonPiece = new Piece();
+                pentagonPiece.move(YutResult.MO.getMove(), pentagonBoard); // 5번 꼭짓점
+                pentagonPiece.move(YutResult.GEOL.getMove(), pentagonBoard); // CENTER 3단계 (중앙)
+                assertEquals(35, pentagonPiece.getPosition(), "오각형 보드 중앙 셀 위치");
+
+                // 육각형 보드
+                Board hexagonBoard = new Board(BoardShape.HEXAGON);
+                Piece hexagonPiece = new Piece();
+                hexagonPiece.move(YutResult.MO.getMove(), hexagonBoard); // 5번 꼭짓점
+                hexagonPiece.move(YutResult.GEOL.getMove(), hexagonBoard); // CENTER 3단계 (중앙)
+                assertEquals(42, hexagonPiece.getPosition(), "육각형 보드 중앙 셀 위치");
+            }
+
+            @Test
+            @DisplayName("4단계: 중앙 통과 후 반대편 분기 이동")
+            void testCenterRoute4thStep() {
+                // 사각형 보드
+                Board squareBoard = new Board(BoardShape.SQUARE);
+                Piece squarePiece = new Piece();
+                squarePiece.move(YutResult.MO.getMove(), squareBoard); // 5번 꼭짓점
+                squarePiece.move(YutResult.YUT.getMove(), squareBoard); // CENTER 4단계
+                assertEquals(27, squarePiece.getPosition(), "사각형 보드 5번 꼭짓점에서 CENTER 4단계");
+
+                // 오각형 보드
+                Board pentagonBoard = new Board(BoardShape.PENTAGON);
+                Piece pentagonPiece = new Piece();
+                pentagonPiece.move(YutResult.MO.getMove(), pentagonBoard); // 5번 꼭짓점
+                pentagonPiece.move(YutResult.YUT.getMove(), pentagonBoard); // CENTER 4단계
+                assertEquals(34, pentagonPiece.getPosition(), "오각형 보드 5번 꼭짓점에서 CENTER 4단계");
+
+                // 육각형 보드
+                Board hexagonBoard = new Board(BoardShape.HEXAGON);
+                Piece hexagonPiece = new Piece();
+                hexagonPiece.move(YutResult.MO.getMove(), hexagonBoard); // 5번 꼭짓점
+                hexagonPiece.move(YutResult.YUT.getMove(), hexagonBoard); // CENTER 4단계
+                assertEquals(41, hexagonPiece.getPosition(), "육각형 보드 5번 꼭짓점에서 CENTER 4단계");
+            }
+
+            @Test
+            @DisplayName("5단계: 최종 외곽 복귀 지점 도달")
+            void testCenterRoute5thStep() {
+                // 사각형 보드
+                Board squareBoard = new Board(BoardShape.SQUARE);
+                Piece squarePiece = new Piece();
+                squarePiece.move(YutResult.MO.getMove(), squareBoard); // 5번 꼭짓점
+                squarePiece.move(YutResult.MO.getMove(), squareBoard); // CENTER 5단계
+                assertEquals(26, squarePiece.getPosition(), "사각형 보드 5번 꼭짓점에서 CENTER 5단계");
+
+                // 오각형 보드
+                Board pentagonBoard = new Board(BoardShape.PENTAGON);
+                Piece pentagonPiece = new Piece();
+                pentagonPiece.move(YutResult.MO.getMove(), pentagonBoard); // 5번 꼭짓점
+                pentagonPiece.move(YutResult.MO.getMove(), pentagonBoard); // CENTER 5단계
+                assertEquals(33, pentagonPiece.getPosition(), "오각형 보드 5번 꼭짓점에서 CENTER 5단계");
+
+                // 육각형 보드
+                Board hexagonBoard = new Board(BoardShape.HEXAGON);
+                Piece hexagonPiece = new Piece();
+                hexagonPiece.move(YutResult.MO.getMove(), hexagonBoard); // 5번 꼭짓점
+                hexagonPiece.move(YutResult.MO.getMove(), hexagonBoard); // CENTER 5단계
+                assertEquals(40, hexagonPiece.getPosition(), "육각형 보드 5번 꼭짓점에서 CENTER 5단계");
+            }
+
+            @Nested
+            @DisplayName("CENTER 경로 백트래킹")
+            class CenterRouteBacktrackTest {
+
+                @Test
+                @DisplayName("1단계에서 백도: 원래 꼭짓점으로 복귀")
+                void testBacktrackFromCenter1stStep() {
+                    // 사각형 보드
+                    Board squareBoard = new Board(BoardShape.SQUARE);
+                    Piece squarePiece = new Piece();
+                    squarePiece.move(YutResult.MO.getMove(), squareBoard); // 5번 꼭짓점
+                    squarePiece.move(YutResult.DO.getMove(), squareBoard); // CENTER 1단계
+                    squarePiece.move(YutResult.BACKDO.getMove(), squareBoard); // 백도
+                    assertEquals(5, squarePiece.getPosition(), "사각형 보드 CENTER 1단계에서 백도 후 꼭짓점 복귀");
+
+                    // 오각형 보드
+                    Board pentagonBoard = new Board(BoardShape.PENTAGON);
+                    Piece pentagonPiece = new Piece();
+                    pentagonPiece.move(YutResult.MO.getMove(), pentagonBoard); // 5번 꼭짓점
+                    pentagonPiece.move(YutResult.DO.getMove(), pentagonBoard); // CENTER 1단계
+                    pentagonPiece.move(YutResult.BACKDO.getMove(), pentagonBoard); // 백도
+                    assertEquals(5, pentagonPiece.getPosition(), "오각형 보드 CENTER 1단계에서 백도 후 꼭짓점 복귀");
+
+                    // 육각형 보드
+                    Board hexagonBoard = new Board(BoardShape.HEXAGON);
+                    Piece hexagonPiece = new Piece();
+                    hexagonPiece.move(YutResult.MO.getMove(), hexagonBoard); // 5번 꼭짓점
+                    hexagonPiece.move(YutResult.DO.getMove(), hexagonBoard); // CENTER 1단계
+                    hexagonPiece.move(YutResult.BACKDO.getMove(), hexagonBoard); // 백도
+                    assertEquals(5, hexagonPiece.getPosition(), "육각형 보드 CENTER 1단계에서 백도 후 꼭짓점 복귀");
+                }
+
+                @Test
+                @DisplayName("2단계에서 백도: 1단계로 후퇴")
+                void testBacktrackFromCenter2ndStep() {
+                    // 사각형 보드
+                    Board squareBoard = new Board(BoardShape.SQUARE);
+                    Piece squarePiece = new Piece();
+                    squarePiece.move(YutResult.MO.getMove(), squareBoard); // 5번 꼭짓점
+                    squarePiece.move(YutResult.GAE.getMove(), squareBoard); // CENTER 2단계
+                    squarePiece.move(YutResult.BACKDO.getMove(), squareBoard); // 백도
+                    assertEquals(22, squarePiece.getPosition(), "사각형 보드 CENTER 2단계에서 백도 후 1단계");
+
+                    // 오각형 보드
+                    Board pentagonBoard = new Board(BoardShape.PENTAGON);
+                    Piece pentagonPiece = new Piece();
+                    pentagonPiece.move(YutResult.MO.getMove(), pentagonBoard); // 5번 꼭짓점
+                    pentagonPiece.move(YutResult.GAE.getMove(), pentagonBoard); // CENTER 2단계
+                    pentagonPiece.move(YutResult.BACKDO.getMove(), pentagonBoard); // 백도
+                    assertEquals(27, pentagonPiece.getPosition(), "오각형 보드 CENTER 2단계에서 백도 후 1단계");
+
+                    // 육각형 보드
+                    Board hexagonBoard = new Board(BoardShape.HEXAGON);
+                    Piece hexagonPiece = new Piece();
+                    hexagonPiece.move(YutResult.MO.getMove(), hexagonBoard); // 5번 꼭짓점
+                    hexagonPiece.move(YutResult.GAE.getMove(), hexagonBoard); // CENTER 2단계
+                    hexagonPiece.move(YutResult.BACKDO.getMove(), hexagonBoard); // 백도
+                    assertEquals(32, hexagonPiece.getPosition(), "육각형 보드 CENTER 2단계에서 백도 후 1단계");
+                }
+
+                @Test
+                @DisplayName("중앙에서 백도: 2단계로 후퇴")
+                void testBacktrackFromCenterCell() {
+                    // 사각형 보드
+                    Board squareBoard = new Board(BoardShape.SQUARE);
+                    Piece squarePiece = new Piece();
+                    squarePiece.move(YutResult.MO.getMove(), squareBoard); // 5번 꼭짓점
+                    squarePiece.move(YutResult.GEOL.getMove(), squareBoard); // 중앙
+                    squarePiece.move(YutResult.BACKDO.getMove(), squareBoard); // 백도
+                    assertEquals(23, squarePiece.getPosition(), "사각형 보드 중앙에서 백도 후 2단계");
+
+                    // 오각형 보드
+                    Board pentagonBoard = new Board(BoardShape.PENTAGON);
+                    Piece pentagonPiece = new Piece();
+                    pentagonPiece.move(YutResult.MO.getMove(), pentagonBoard); // 5번 꼭짓점
+                    pentagonPiece.move(YutResult.GEOL.getMove(), pentagonBoard); // 중앙
+                    pentagonPiece.move(YutResult.BACKDO.getMove(), pentagonBoard); // 백도
+                    assertEquals(28, pentagonPiece.getPosition(), "오각형 보드 중앙에서 백도 후 2단계");
+
+                    // 육각형 보드
+                    Board hexagonBoard = new Board(BoardShape.HEXAGON);
+                    Piece hexagonPiece = new Piece();
+                    hexagonPiece.move(YutResult.MO.getMove(), hexagonBoard); // 5번 꼭짓점
+                    hexagonPiece.move(YutResult.GEOL.getMove(), hexagonBoard); // 중앙
+                    hexagonPiece.move(YutResult.BACKDO.getMove(), hexagonBoard); // 백도
+                    assertEquals(33, hexagonPiece.getPosition(), "육각형 보드 중앙에서 백도 후 2단계");
+                }
+            }
+
+            @Nested
+            @DisplayName("CENTER에서 외곽 복귀")
+            class CenterToOuterReturnTest {
+
+                @Test
+                @DisplayName("과도한 이동: CENTER 경로를 넘어서 외곽으로 복귀")
+                void testExcessiveMovementReturn() {
+                    // 사각형 보드
+                    Board squareBoard = new Board(BoardShape.SQUARE);
+                    Piece squarePiece = new Piece();
+                    squarePiece.move(YutResult.MO.getMove(), squareBoard); // 5번 꼭짓점
+                    squarePiece.move(YutResult.MO.getMove(), squareBoard); // CENTER에서 5칸
+                    squarePiece.move(YutResult.DO.getMove(), squareBoard);
+                    assertEquals(15, squarePiece.getPosition(), "사각형 보드 5번 꼭짓점에서 과도한 이동 후 외곽 복귀 위치");
+                    squarePiece.move(YutResult.DO.getMove(), squareBoard);
+                    assertEquals(16, squarePiece.getPosition(), "외곽 루트로 정상 이동");
+                    assertFalse(squarePiece.isFinished(), "사각형 보드 외곽 복귀로 아직 완주되지 않음");
+                    squarePiece.move(YutResult.YUT.getMove(), squareBoard);
+                    assertTrue(squarePiece.isFinished(), "사각형 보드 외곽 복귀 후 완주 가능");
+                    assertEquals(0, squarePiece.getPosition(), "사각형 보드 완주 시 위치 0");
+
+                    // 오각형 보드
+                    Board pentagonBoard = new Board(BoardShape.PENTAGON);
+                    Piece pentagonPiece = new Piece();
+                    pentagonPiece.move(YutResult.MO.getMove(), pentagonBoard); // 5번 꼭짓점
+                    pentagonPiece.move(YutResult.MO.getMove(), pentagonBoard); // CENTER에서 5칸
+                    pentagonPiece.move(YutResult.DO.getMove(), pentagonBoard);
+                    assertEquals(20, pentagonPiece.getPosition(), "오각형 보드 5번 꼭짓점에서 과도한 이동 후 외곽 복귀 위치");
+                    pentagonPiece.move(YutResult.DO.getMove(), pentagonBoard);
+                    assertEquals(21, pentagonPiece.getPosition(), "외곽 루트로 정상 이동");
+                    assertFalse(pentagonPiece.isFinished(), "오각형 보드 외곽 복귀로 아직 완주되지 않음");
+                    pentagonPiece.move(YutResult.YUT.getMove(), pentagonBoard);
+                    assertTrue(pentagonPiece.isFinished(), "오각형 보드 외곽 복귀 후 완주 가능");
+                    assertEquals(0, pentagonPiece.getPosition(), "오각형 보드 완주 시 위치 0");
+
+                    // 육각형 보드
+                    Board hexagonBoard = new Board(BoardShape.HEXAGON);
+                    Piece hexagonPiece = new Piece();
+                    hexagonPiece.move(YutResult.MO.getMove(), hexagonBoard); // 5번 꼭짓점
+                    hexagonPiece.move(YutResult.MO.getMove(), hexagonBoard); // CENTER에서 5칸
+                    hexagonPiece.move(YutResult.DO.getMove(), hexagonBoard);
+                    assertEquals(25, hexagonPiece.getPosition(), "육각형 보드 5번 꼭짓점에서 과도한 이동 후 외곽 복귀 위치");
+                    hexagonPiece.move(YutResult.DO.getMove(), hexagonBoard);
+                    assertEquals(26, hexagonPiece.getPosition(), "외곽 루트로 정상 이동");
+                    assertFalse(hexagonPiece.isFinished(), "육각형 보드 외곽 복귀로 아직 완주되지 않음");
+                    hexagonPiece.move(YutResult.YUT.getMove(), hexagonBoard);
+                    assertTrue(hexagonPiece.isFinished(), "육각형 보드 외곽 복귀 후 완주 가능");
+                    assertEquals(0, hexagonPiece.getPosition(), "육각형 보드 완주 시 위치 0");
+                }
+            }
+        }
+
+        @Nested
+        @DisplayName("FINAL 경로 테스트")
+        class FinalRouteTest {
+
+            @Nested
+            @DisplayName("FINAL 경로 진입")
+            class FinalRouteEntranceTest {
+
+                @Test
+                @DisplayName("중앙 셀에서 FINAL 진입: CENTER 경로에서 자동 전환")
+                void testEnterFinalFromCenter() {
+                    // 사각형 보드
+                    Board squareBoard = new Board(BoardShape.SQUARE);
+                    Piece squarePiece = new Piece();
+                    squarePiece.move(YutResult.MO.getMove(), squareBoard); // 5번 꼭짓점
+                    squarePiece.move(YutResult.GEOL.getMove(), squareBoard); // 중앙 도달
+                    assertEquals(28, squarePiece.getPosition(), "사각형 보드 중앙 위치");
+                    squarePiece.move(YutResult.DO.getMove(), squareBoard); // FINAL 1단계
+                    assertEquals(21, squarePiece.getPosition(), "사각형 보드 FINAL 1단계");
+                    squarePiece.move(YutResult.DO.getMove(), squareBoard);
+                    assertEquals(20, squarePiece.getPosition(), "사각형 보드 FINAL 2단계");
+                    squarePiece.move(YutResult.DO.getMove(), squareBoard);
+                    assertTrue(squarePiece.isFinished(), "사각형 보드 FINAL 경로 완주");
+                    assertEquals(0, squarePiece.getPosition(), "사각형 보드 완주 시 위치");
+
+
+                    // 오각형 보드
+                    Board pentagonBoard = new Board(BoardShape.PENTAGON);
+                    Piece pentagonPiece = new Piece();
+                    pentagonPiece.move(YutResult.MO.getMove(), pentagonBoard); // 5번 꼭짓점
+                    pentagonPiece.move(YutResult.GEOL.getMove(), pentagonBoard); // 중앙 도달
+                    assertEquals(35, pentagonPiece.getPosition(), "오각형 보드 중앙 위치");
+                    pentagonPiece.move(YutResult.DO.getMove(), pentagonBoard); // FINAL 1단계
+                    assertEquals(26, pentagonPiece.getPosition(), "오각형 보드 FINAL 1단계");
+                    pentagonPiece.move(YutResult.DO.getMove(), pentagonBoard);
+                    assertEquals(25, pentagonPiece.getPosition(), "오각형 보드 FINAL 2단계");
+                    pentagonPiece.move(YutResult.DO.getMove(), pentagonBoard);
+                    assertTrue(pentagonPiece.isFinished(), "오각형 보드 FINAL 경로 완주");
+                    assertEquals(0, pentagonPiece.getPosition(), "오각형 보드 완주 시 위치");
+
+                    // 육각형 보드
+                    Board hexagonBoard = new Board(BoardShape.HEXAGON);
+                    Piece hexagonPiece = new Piece();
+                    hexagonPiece.move(YutResult.MO.getMove(), hexagonBoard); // 5번 꼭짓점
+                    hexagonPiece.move(YutResult.GEOL.getMove(), hexagonBoard); // 중앙 도달
+                    assertEquals(42, hexagonPiece.getPosition(), "육각형 보드 중앙 위치");
+                    hexagonPiece.move(YutResult.DO.getMove(), hexagonBoard); // FINAL 1단계
+                    assertEquals(31, hexagonPiece.getPosition(), "육각형 보드 FINAL 1단계");
+                    hexagonPiece.move(YutResult.DO.getMove(), hexagonBoard);
+                    assertEquals(30, hexagonPiece.getPosition(), "육각형 보드 FINAL 2단계");
+                    hexagonPiece.move(YutResult.DO.getMove(), hexagonBoard);
+                    assertTrue(hexagonPiece.isFinished(), "육각형 보드 FINAL 경로 완주");
+                    assertEquals(0, hexagonPiece.getPosition(), "육각형 보드 완주 시 위치");
+                }
+
+
+            }
+
+            @Nested
+            @DisplayName("사각형 보드 FINAL 백트래킹")
+            class SquareBoardFinalBacktrackTest {
+
+                @Test
+                @DisplayName("1단계에서 백도: 센터 노드로 복귀")
+                void testBacktrackFromFinal1stStep() {
+                    Board board = new Board(BoardShape.SQUARE);
+                    Piece piece = new Piece();
+
+                    piece.move(YutResult.MO.getMove(), board); // 5번 꼭짓점
+                    piece.move(YutResult.GEOL.getMove(), board); // 중앙
+                    piece.move(YutResult.DO.getMove(), board); // FINAL 1단계
+                    piece.move(YutResult.BACKDO.getMove(), board); // 백도
+                    assertEquals(28, piece.getPosition(), "1단계에서 백도시 센터 노드 복귀");
+                }
+
+                @Test
+                @DisplayName("2단계에서 백도: 1단계로 후퇴")
+                void testBacktrackFromFinal2ndStep() {
+                    Board board = new Board(BoardShape.SQUARE);
+                    Piece piece = new Piece();
+
+                    piece.move(YutResult.MO.getMove(), board); // 5번 꼭짓점
+                    piece.move(YutResult.GEOL.getMove(), board); // 중앙
+                    piece.move(YutResult.GAE.getMove(), board); // FINAL 2단계
+                    piece.move(YutResult.BACKDO.getMove(), board); // 백도
+                    assertEquals(21, piece.getPosition(), "1단계로 이동");
+                }
+
+                @Test
+                @DisplayName("0단계에서 백도: 꼭짓점 5에서 분기")
+                void testBacktrackFromFinal0thStep5() {
+                    Board board = new Board(BoardShape.SQUARE);
+                    Piece piece = new Piece();
+
+                    piece.move(YutResult.MO.getMove(), board); // 5번 꼭짓점
+                    piece.move(YutResult.GEOL.getMove(), board); // 중앙 (FINAL 0단계)
+                    piece.move(YutResult.BACKDO.getMove(), board); // CENTER로 복귀
+                    assertEquals(23, piece.getPosition(), "센터루트에 따라 이동");
+                }
+
+                @Test
+                @DisplayName("0단계에서 백도: 꼭짓점 10에서 분기")
+                void testBacktrackFromFinal0thStep10() {
+                    Board board = new Board(BoardShape.SQUARE);
+                    Piece piece = new Piece();
+
+                    piece.move(YutResult.YUT.getMove(), board); // 4
+                    piece.move(YutResult.YUT.getMove(), board); // 8
+                    piece.move(YutResult.GAE.getMove(), board); // 10
+                    piece.move(YutResult.GEOL.getMove(), board); // 중앙 (FINAL 0단계)
+                    piece.move(YutResult.BACKDO.getMove(), board); // CENTER로 복귀
+                    assertEquals(25, piece.getPosition(), "센터루트에 따라 이동");
+                }
+
+
+            }
+
+            // ================================================================================================
+            // 오각형 보드 테스트
+            // ================================================================================================
+
+            @Nested
+            @DisplayName("오각형 보드 FINAL 백트래킹")
+            class PentagonBoardFinalBacktrackTest {
+
+                @Test
+                @DisplayName("1단계에서 백도: 센터 노드로 복귀")
+                void testBacktrackFromFinal1stStep() {
+                    Board board = new Board(BoardShape.PENTAGON);
+                    Piece piece = new Piece();
+
+                    piece.move(YutResult.MO.getMove(), board); // 5번 꼭짓점
+                    piece.move(YutResult.GEOL.getMove(), board); // 중앙
+                    piece.move(YutResult.DO.getMove(), board); // FINAL 1단계
+                    piece.move(YutResult.BACKDO.getMove(), board); // 백도
+                    assertEquals(35, piece.getPosition(), "1단계에서 백도시 센터 노드 복귀");
+                }
+
+                @Test
+                @DisplayName("2단계에서 백도: 1단계로 후퇴")
+                void testBacktrackFromFinal2ndStep() {
+                    Board board = new Board(BoardShape.PENTAGON);
+                    Piece piece = new Piece();
+
+                    piece.move(YutResult.MO.getMove(), board); // 5번 꼭짓점
+                    piece.move(YutResult.GEOL.getMove(), board); // 중앙
+                    piece.move(YutResult.GAE.getMove(), board); // FINAL 2단계
+                    piece.move(YutResult.BACKDO.getMove(), board); // 백도
+                    assertEquals(26, piece.getPosition(), "1단계로 이동");
+                }
+
+                @Test
+                @DisplayName("0단계에서 백도: 꼭짓점 5에서 분기")
+                void testBacktrackFromFinal0thStep5() {
+                    Board board = new Board(BoardShape.PENTAGON);
+                    Piece piece = new Piece();
+
+                    piece.move(YutResult.MO.getMove(), board); // 5번 꼭짓점
+                    piece.move(YutResult.GEOL.getMove(), board); // 중앙 (FINAL 0단계)
+                    piece.move(YutResult.BACKDO.getMove(), board); // CENTER로 복귀
+                    assertEquals(28, piece.getPosition(), "센터루트에 따라 이동");
+                }
+
+                @Test
+                @DisplayName("0단계에서 백도: 꼭짓점 10에서 분기")
+                void testBacktrackFromFinal0thStep10() {
+                    Board board = new Board(BoardShape.PENTAGON);
+                    Piece piece = new Piece();
+
+                    piece.move(YutResult.YUT.getMove(), board); // 4
+                    piece.move(YutResult.YUT.getMove(), board); // 8
+                    piece.move(YutResult.GAE.getMove(), board); // 10
+                    piece.move(YutResult.GEOL.getMove(), board); // 중앙 (FINAL 0단계)
+                    piece.move(YutResult.BACKDO.getMove(), board); // CENTER로 복귀
+                    assertEquals(30, piece.getPosition(), "센터루트에 따라 이동");
+                }
+
+                @Test
+                @DisplayName("0단계에서 백도: 꼭짓점 15에서 분기")
+                void testBacktrackFromFinal0thStep15() {
+                    Board board = new Board(BoardShape.PENTAGON);
+                    Piece piece = new Piece();
+
+                    piece.move(YutResult.YUT.getMove(), board); // 4
+                    piece.move(YutResult.YUT.getMove(), board); // 8
+                    piece.move(YutResult.YUT.getMove(), board); // 12
+                    piece.move(YutResult.GEOL.getMove(), board); // 15
+                    piece.move(YutResult.GEOL.getMove(), board); // 중앙 (FINAL 0단계)
+                    piece.move(YutResult.BACKDO.getMove(), board); // CENTER로 복귀
+                    assertEquals(32, piece.getPosition(), "센터루트에 따라 이동");
+                }
+
+            }
+
+            // ================================================================================================
+            // 육각형 보드 테스트
+            // ================================================================================================
+
+            @Nested
+            @DisplayName("육각형 보드 FINAL 백트래킹")
+            class HexagonBoardFinalBacktrackTest {
+
+                @Test
+                @DisplayName("1단계에서 백도: 센터 노드로 복귀")
+                void testBacktrackFromFinal1stStep() {
+                    Board board = new Board(BoardShape.HEXAGON);
+                    Piece piece = new Piece();
+
+                    piece.move(YutResult.MO.getMove(), board); // 5번 꼭짓점
+                    piece.move(YutResult.GEOL.getMove(), board); // 중앙
+                    piece.move(YutResult.DO.getMove(), board); // FINAL 1단계
+                    piece.move(YutResult.BACKDO.getMove(), board); // 백도
+                    assertEquals(42, piece.getPosition(), "1단계에서 백도시 센터 노드 복귀");
+                }
+
+                @Test
+                @DisplayName("2단계에서 백도: 1단계로 후퇴")
+                void testBacktrackFromFinal2ndStep() {
+                    Board board = new Board(BoardShape.HEXAGON);
+                    Piece piece = new Piece();
+
+                    piece.move(YutResult.MO.getMove(), board); // 5번 꼭짓점
+                    piece.move(YutResult.GEOL.getMove(), board); // 중앙
+                    piece.move(YutResult.GAE.getMove(), board); // FINAL 2단계
+                    piece.move(YutResult.BACKDO.getMove(), board); // 백도
+                    assertEquals(31, piece.getPosition(), "1단계로 이동");
+                }
+
+                @Test
+                @DisplayName("0단계에서 백도: 꼭짓점 5에서 분기")
+                void testBacktrackFromFinal0thStep5() {
+                    Board board = new Board(BoardShape.HEXAGON);
+                    Piece piece = new Piece();
+
+                    piece.move(YutResult.MO.getMove(), board); // 5번 꼭짓점
+                    piece.move(YutResult.GEOL.getMove(), board); // 중앙 (FINAL 0단계)
+                    piece.move(YutResult.BACKDO.getMove(), board); // CENTER로 복귀
+                    assertEquals(33, piece.getPosition(), "센터루트에 따라 이동");
+                }
+
+                @Test
+                @DisplayName("0단계에서 백도: 꼭짓점 10에서 분기")
+                void testBacktrackFromFinal0thStep10() {
+                    Board board = new Board(BoardShape.HEXAGON);
+                    Piece piece = new Piece();
+
+                    piece.move(YutResult.YUT.getMove(), board); // 4
+                    piece.move(YutResult.YUT.getMove(), board); // 8
+                    piece.move(YutResult.GAE.getMove(), board); // 10
+                    piece.move(YutResult.GEOL.getMove(), board); // 중앙 (FINAL 0단계)
+                    piece.move(YutResult.BACKDO.getMove(), board); // CENTER로 복귀
+                    assertEquals(35, piece.getPosition(), "센터루트에 따라 이동");
+                }
+
+                @Test
+                @DisplayName("0단계에서 백도: 꼭짓점 15에서 분기")
+                void testBacktrackFromFinal0thStep15() {
+                    Board board = new Board(BoardShape.HEXAGON);
+                    Piece piece = new Piece();
+
+                    piece.move(YutResult.YUT.getMove(), board); // 4
+                    piece.move(YutResult.YUT.getMove(), board); // 8
+                    piece.move(YutResult.YUT.getMove(), board); // 12
+                    piece.move(YutResult.GEOL.getMove(), board); // 15
+                    piece.move(YutResult.GEOL.getMove(), board); // 중앙 (FINAL 0단계)
+                    piece.move(YutResult.BACKDO.getMove(), board); // CENTER로 복귀
+                    assertEquals(37, piece.getPosition(), "센터루트에 따라 이동");
+                }
+
+                @Test
+                @DisplayName("0단계에서 백도: 꼭짓점 20에서 분기")
+                void testBacktrackFromFinal0thStep20() {
+                    Board board = new Board(BoardShape.HEXAGON);
+                    Piece piece = new Piece();
+
+                    piece.move(YutResult.YUT.getMove(), board); // 4
+                    piece.move(YutResult.YUT.getMove(), board); // 8
+                    piece.move(YutResult.YUT.getMove(), board); // 12
+                    piece.move(YutResult.YUT.getMove(), board); // 16
+                    piece.move(YutResult.YUT.getMove(), board); // 20
+                    piece.move(YutResult.GEOL.getMove(), board); // 중앙 (FINAL 0단계)
+                    piece.move(YutResult.BACKDO.getMove(), board); // CENTER로 복귀
+                    assertEquals(39, piece.getPosition(), "센터루트에 따라 이동");
+                }
+
+            }
+
+            @Nested
+            @DisplayName("사각형, 육각형 특수 종료 케이스")
+            class BoardSpecificFinalRouteTest {
+
+                @Test
+                @DisplayName("사각형 보드 - 10번 꼭짓점 직결: CENTER 이동으로 바로 완주")
+                void testSquareVertex10DirectCompletion() {
+                    Board board = new Board(BoardShape.SQUARE);
+                    Piece piece = new Piece();
+
+                    // 10번 꼭짓점 도달
+                    piece.move(YutResult.GEOL.getMove(), board); // 3번
+                    piece.move(YutResult.GEOL.getMove(), board); //6
+                    piece.move(YutResult.GEOL.getMove(), board); //9
+                    piece.move(YutResult.DO.getMove(), board);// 10번
+                    assertEquals(10, piece.getPosition(), "10번 꼭짓점 도달");
+
+                    // CENTER 경로로 진입 후 CENTER에 멈추지 않고 6칸 이동으로 완주
+                    piece.move(YutResult.MO.getMove(), board);
+                    piece.move(YutResult.DO.getMove(), board);
+                    assertTrue(piece.isFinished(), "10번 꼭짓점에서 6칸 이동으로 완주되어야 함");
+                }
+
+                @Test
+                @DisplayName("육각형 보드 - 15번 꼭짓점 직결")
+                void testHexagonVertex15DirectCompletion() {
+                    Board board = new Board(BoardShape.HEXAGON);
+                    Piece piece = new Piece();
+
+                    // 15번 꼭짓점 도달
+                    piece.move(YutResult.YUT.getMove(), board); //4
+                    piece.move(YutResult.YUT.getMove(), board); //8
+                    piece.move(YutResult.YUT.getMove(), board); //12
+                    piece.move(YutResult.GEOL.getMove(), board);// 15번
+                    assertEquals(15, piece.getPosition(), "15번 꼭짓점 도달");
+
+                    // CENTER 경로로 진입 후 CENTER에 멈추지 않고 6칸 이동으로 완주
+                    piece.move(YutResult.MO.getMove(), board);
+                    piece.move(YutResult.DO.getMove(), board);
+                    assertTrue(piece.isFinished(), "15번 꼭짓점에서 6칸 이동으로 완주되어야 함");
+                }
+            }
+        }
+
+        @Nested
+        @DisplayName("플레이어 및 말 관리 테스트")
+        class PlayerPieceManagementTest {
+
+            @Nested
+            @DisplayName("플레이어 생성 테스트")
+            class PlayerCreationTest {
+
+                @Test
+                @DisplayName("플레이어 생성(2~4명 생성)")
+                void testPlayerCreation() {
+                    Game game = new Game(new Board(BoardShape.SQUARE));
+
+                    // 2명 플레이어
+                    game.addPlayer(player1);
+                    game.addPlayer(player2);
+                    assertEquals(2, game.getPlayers().size(), "2명 플레이어 추가");
+
+                    // 3명 플레이어
+                    game.addPlayer(player3);
+                    assertEquals(3, game.getPlayers().size(), "3명 플레이어 추가");
+
+                    // 4명 플레이어
+                    game.addPlayer(player4);
+                    assertEquals(4, game.getPlayers().size(), "4명 플레이어 추가");
+                }
+
+                @Test
+                @DisplayName("말 개수(2~5개)")
+                void testVariousPieceCounts() {
+                    int[] pieceCounts = {2, 3, 4, 5};
+                    Color[] colors = {Color.RED, Color.BLUE, Color.GREEN, Color.YELLOW};
+
+                    for (int i = 0; i < pieceCounts.length; i++) {
+                        Player player = new Player("플레이어" + (i + 1), pieceCounts[i], colors[i]);
+                        assertEquals(pieceCounts[i], player.getPieces().size(),
+                                "플레이어 " + (i + 1) + "의 말 개수");
+                    }
+                }
+
+                @Test
+                @DisplayName("말 초기 상태: 모든 말이 위치 0, 미완주, 미그룹 상태")
+                void testInitialPieceStates() {
+                    Player player = new Player("초기상태테스트", 5, Color.GREEN);
+
+                    for (int i = 0; i < player.getPieces().size(); i++) {
+                        Piece piece = player.getPieces().get(i);
+                        assertEquals(0, piece.getPosition(), "말 " + i + "의 초기 위치");
+                        assertFalse(piece.isFinished(), "말 " + i + "의 초기 완주 상태");
+                        assertFalse(piece.isGrouped(), "말 " + i + "의 초기 그룹 상태");
+                    }
+                }
+            }
+
+            @Nested
+            @DisplayName("플레이어 말 이동 인터페이스")
+            class PlayerPieceMovementInterfaceTest {
+
+                @Test
+                @DisplayName("movePiece 메서드: 올바른 말 이동 처리")
+                void testMovePieceMethodCorrectOperation() {
+                    Board board = new Board(BoardShape.SQUARE);
+                    Player player = new Player("이동테스트", 4, Color.GREEN);
+
+                    // 각 말을 다르게 이동
+                    player.movePiece(0, YutResult.DO, board.getTotalCells(), board);
+                    player.movePiece(1, YutResult.GAE, board.getTotalCells(), board);
+                    player.movePiece(2, YutResult.GEOL, board.getTotalCells(), board);
+                    player.movePiece(3, YutResult.YUT, board.getTotalCells(), board);
+
+                    assertEquals(1, player.getPieces().get(0).getPosition(), "말 0 이동");
+                    assertEquals(2, player.getPieces().get(1).getPosition(), "말 1 이동");
+                    assertEquals(3, player.getPieces().get(2).getPosition(), "말 2 이동");
+                    assertEquals(4, player.getPieces().get(3).getPosition(), "말 3 이동");
+                }
+
+                @Test
+                @DisplayName("완주된 말 이동 시도 무시되는지 확인")
+                void testFinishedPieceMovementAttempt() {
+                    Board board = new Board(BoardShape.SQUARE);
+                    Player player = new Player("완주테스트", 2, Color.RED);
+
+                    // 첫 번째 말을 완주시킴
+                    player.getPieces().get(0).setFinished(true);
+                    player.getPieces().get(0).setPosition(0);
+
+                    // 완주된 말 이동 시도
+                    player.movePiece(0, YutResult.MO, board.getTotalCells(), board);
+
+                    assertEquals(0, player.getPieces().get(0).getPosition(), "완주된 말 위치 유지");
+                    assertTrue(player.getPieces().get(0).isFinished(), "완주 상태 유지");
+                }
+            }
+        }
+
+        @Nested
+        @DisplayName("게임 로직 테스트")
+        class GameLogicTest {
+
+            @Nested
+            @DisplayName("턴 관리 테스트")
+            class TurnManagementTest {
+
+                @Test
+                @DisplayName("턴 순환: nextTurn()으로 플레이어 순환")
+                void testTurnRotation() {
+                    Game game = new Game(new Board(BoardShape.SQUARE));
+                    game.addPlayer(player1);
+                    game.addPlayer(player2);
+                    game.addPlayer(player3);
+
+                    assertEquals(player1, game.getCurrentPlayer(), "초기 플레이어");
+
+                    game.nextTurn();
+                    assertEquals(player2, game.getCurrentPlayer(), "두 번째 플레이어");
+
+                    game.nextTurn();
+                    assertEquals(player3, game.getCurrentPlayer(), "세 번째 플레이어");
+                }
+
+                @Test
+                @DisplayName("순환 복귀: 마지막 플레이어 후 첫 번째로 복귀")
+                void testTurnCircularReturn() {
+                    Game game = new Game(new Board(BoardShape.PENTAGON));
+                    game.addPlayer(player1);
+                    game.addPlayer(player2);
+                    game.addPlayer(player3);
+
+                    // 3번 턴 변경 후 첫 번째 플레이어로 복귀
+                    game.nextTurn(); // player2
+                    game.nextTurn(); // player3
+                    game.nextTurn(); // player1으로 복귀
+
+                    assertEquals(player1, game.getCurrentPlayer(), "순환 복귀 확인");
+                }
+            }
+
+            @Nested
+            @DisplayName("게임 종료 테스트")
+            class WinConditionTest {
+
+                @Test
+                @DisplayName("승리 조건 확인: checkWinCondition() 정확성")
+                void testWinConditionCheck() {
+                    Game game = new Game(new Board(BoardShape.HEXAGON));
+                    game.addPlayer(player1);
+                    game.addPlayer(player2);
+
+                    // 초기 상태 - 승리자 없음
+                    assertFalse(game.checkWinCondition(), "초기 상태 승리 조건");
+
+                    // player1의 모든 말 완주
+                    for (Piece piece : player1.getPieces()) {
+                        piece.setFinished(true);
+                    }
+
+                    assertTrue(game.checkWinCondition(), "모든 말 완주 시 승리 조건");
+                }
+
+                @Test
+                @DisplayName("승리자 반환: getWinner() 올바른 플레이어 반환")
+                void testWinnerReturn() {
+                    Game game = new Game(new Board(BoardShape.SQUARE));
+                    game.addPlayer(player1);
+                    game.addPlayer(player2);
+
+                    assertNull(game.getWinner(), "초기 상태 승리자 없음");
+
+                    // player2가 승리
+                    for (Piece piece : player2.getPieces()) {
+                        piece.setFinished(true);
+                    }
+
+                    assertEquals(player2, game.getWinner(), "승리자 정확히 반환");
+                }
+
+                @Test
+                @DisplayName("게임 종료 후 재시작시 초기 상태 복원 확인")
+                void testGameResetAfterCompletion() {
+                    Game game = new Game(new Board(BoardShape.PENTAGON));
+                    game.addPlayer(player1);
+
+                    // 게임 진행 및 완주
+                    player1.movePiece(0, YutResult.MO, game.getBoard().getTotalCells(), game.getBoard());
+                    for (Piece piece : player1.getPieces()) {
+                        piece.setFinished(true);
+                    }
+
+                    assertTrue(game.checkWinCondition(), "완주 후 승리 조건");
+
+                    // 게임 리셋
+                    game.reset();
+
+                    // 초기 상태 복원 확인
+                    assertFalse(game.checkWinCondition(), "리셋 후 승리 조건 초기화");
+                    assertNull(game.getWinner(), "리셋 후 승리자 초기화");
+                    assertEquals(player1, game.getCurrentPlayer(), "리셋 후 첫 번째 플레이어");
+
+                    for (Piece piece : player1.getPieces()) {
+                        assertEquals(0, piece.getPosition(), "리셋 후 말 위치 초기화");
+                        assertFalse(piece.isFinished(), "리셋 후 완주 상태 초기화");
+                        assertFalse(piece.isGrouped(), "리셋 후 그룹 상태 초기화");
+                    }
+                }
+            }
+        }
+
+
+        @Nested
+        @DisplayName("말 상호작용 테스트")
+        class PieceInteractionTest {
+
+            @Nested
+            @DisplayName("그룹핑 테스트")
+            class SamePlayerGroupingTest {
+
+                @Test
+                @DisplayName("그룹 여부 확인")
+                void testSamePositionGrouping() {
+                    Game game = new Game(new Board(BoardShape.SQUARE));
+                    game.addPlayer(player1);
+
+                    // 두 말을 같은 위치로 이동
+                    player1.movePiece(0, YutResult.GEOL, game.getBoard().getTotalCells(), game.getBoard());
+                    player1.movePiece(1, YutResult.GEOL, game.getBoard().getTotalCells(), game.getBoard());
+
+                    assertEquals(3, player1.getPieces().get(0).getPosition());
+                    assertEquals(3, player1.getPieces().get(1).getPosition());
+
+                    // 그룹핑 처리
+                    game.processPieceLanding(player1.getPieces().get(1), player1);
+
+                    assertTrue(player1.getPieces().get(0).isGrouped(), "첫 번째 말 그룹됨");
+                    assertTrue(player1.getPieces().get(1).isGrouped(), "두 번째 말 그룹됨");
+                }
+
+                @Test
+                @DisplayName("그룹 위치 동기화")
+                void testGroupPositionSynchronization() {
+                    Game game = new Game(new Board(BoardShape.HEXAGON));
+                    game.addPlayer(player1);
+
+                    // 두 말을 그룹핑
+                    player1.movePiece(0, YutResult.YUT, game.getBoard().getTotalCells(), game.getBoard());
+                    player1.movePiece(1, YutResult.YUT, game.getBoard().getTotalCells(), game.getBoard());
+                    game.processPieceLanding(player1.getPieces().get(1), player1);
+
+                    // 그룹된 말 중 하나 이동
+                    int beforePos = player1.getPieces().get(0).getPosition();
+                    player1.movePiece(0, YutResult.GAE, game.getBoard().getTotalCells(), game.getBoard());
+                    game.processPieceLanding(player1.getPieces().get(0), player1);
+
+                    // 그룹 위치 동기화 확인
+                    assertEquals(player1.getPieces().get(0).getPosition(),
+                            player1.getPieces().get(1).getPosition(), "그룹 위치 동기화");
+                }
+
+            }
+
+            @Nested
+            @DisplayName("캡처 테스트")
+            class PieceCaptureTest {
+
+                @Test
+                @DisplayName("단일 말 캡처")
+                void testSinglePieceCapture() {
+                    Game game = new Game(new Board(BoardShape.SQUARE));
+                    game.addPlayer(player1);
+                    game.addPlayer(player2);
+
+                    // player2의 말을 특정 위치로 이동
+                    player2.movePiece(0, YutResult.GEOL, game.getBoard().getTotalCells(), game.getBoard());
+                    assertEquals(3, player2.getPieces().get(0).getPosition());
+
+                    // player1의 말이 같은 위치로 이동하여 캡처
+                    player1.movePiece(0, YutResult.GEOL, game.getBoard().getTotalCells(), game.getBoard());
+                    boolean captured = game.processPieceLanding(player1.getPieces().get(0), player1);
+
+                    assertTrue(captured, "캡처 발생");
+                    assertEquals(0, player2.getPieces().get(0).getPosition(), "캡처된 말 위치");
+                    assertFalse(player2.getPieces().get(0).isFinished(), "캡처된 말 완주 상태");
+                }
+
+                @Test
+                @DisplayName("그룹 말 캡처")
+                void testGroupPieceCapture() {
+                    Game game = new Game(new Board(BoardShape.PENTAGON));
+                    game.addPlayer(player1);
+                    game.addPlayer(player2);
+
+                    // player2의 두 말을 그룹핑
+                    player2.movePiece(0, YutResult.YUT, game.getBoard().getTotalCells(), game.getBoard());
+                    player2.movePiece(1, YutResult.YUT, game.getBoard().getTotalCells(), game.getBoard());
+                    game.processPieceLanding(player2.getPieces().get(1), player2);
+
+                    assertTrue(player2.getPieces().get(0).isGrouped());
+                    assertTrue(player2.getPieces().get(1).isGrouped());
+
+                    // player1이 그룹 캡처
+                    player1.movePiece(0, YutResult.YUT, game.getBoard().getTotalCells(), game.getBoard());
+                    boolean captured = game.processPieceLanding(player1.getPieces().get(0), player1);
+
+                    assertTrue(captured, "그룹 캡처 발생");
+                    assertEquals(0, player2.getPieces().get(0).getPosition(), "첫 번째 캡처된 말 위치");
+                    assertEquals(0, player2.getPieces().get(1).getPosition(), "두 번째 캡처된 말 위치");
+                    assertFalse(player2.getPieces().get(0).isGrouped(), "캡처 후 그룹 해제");
+                    assertFalse(player2.getPieces().get(1).isGrouped(), "캡처 후 그룹 해제");
+                }
+
+                @Test
+                @DisplayName("그룹된 말들 간 캡처")
+                void testGroupVsGroupCapture() {
+                    Game game = new Game(new Board(BoardShape.HEXAGON));
+                    game.addPlayer(player1);
+                    game.addPlayer(player2);
+
+                    // player1 그룹 생성 (위치 1)
+                    player1.movePiece(0, YutResult.DO, game.getBoard().getTotalCells(), game.getBoard());
+                    player1.movePiece(1, YutResult.DO, game.getBoard().getTotalCells(), game.getBoard());
+                    game.processPieceLanding(player1.getPieces().get(1), player1);
+
+                    assertEquals(1, player1.getPieces().get(0).getPosition());
+                    assertEquals(1, player1.getPieces().get(1).getPosition());
+                    assertTrue(player1.getPieces().get(0).isGrouped());
+                    assertTrue(player1.getPieces().get(1).isGrouped());
+
+                    // player2 그룹 생성 (위치 2)
+                    player2.movePiece(0, YutResult.GAE, game.getBoard().getTotalCells(), game.getBoard());
+                    player2.movePiece(1, YutResult.GAE, game.getBoard().getTotalCells(), game.getBoard());
+                    player2.movePiece(2, YutResult.GAE, game.getBoard().getTotalCells(), game.getBoard());
+                    game.processPieceLanding(player2.getPieces().get(1), player2);
+                    game.processPieceLanding(player2.getPieces().get(2), player2);
+
+                    assertEquals(2, player2.getPieces().get(0).getPosition());
+                    assertEquals(2, player2.getPieces().get(1).getPosition());
+                    assertEquals(2, player2.getPieces().get(2).getPosition());
+
+                    player1.movePiece(0, YutResult.DO, game.getBoard().getTotalCells(), game.getBoard());
+
+                    // player1 그룹이 player2 그룹을 캡처 (이미 같은 위치)
+                    boolean captured = game.processPieceLanding(player1.getPieces().get(0), player1);
+
+                    assertTrue(captured, "그룹 대 그룹 캡처 발생");
+                    assertEquals(0, player2.getPieces().get(0).getPosition(), "캡처된 그룹 말 1");
+                    assertEquals(0, player2.getPieces().get(1).getPosition(), "캡처된 그룹 말 2");
+                    assertEquals(0, player2.getPieces().get(2).getPosition(), "캡처된 그룹 말 3");
+                }
+
+
+                @Test
+                @DisplayName("캡처 발생시 currentPlayer 유지로 추가 턴 검증")
+                void testExtraTurnAfterCapture() {
+                    Game game = new Game(new Board(BoardShape.SQUARE));
+                    GameController controller = new GameController(game, new DummyGameView()); // mockView는 Mockito 등으로 대체
+                    game.addPlayer(player1);
+                    game.addPlayer(player2);
+
+                    // player2 말 배치
+                    player2.movePiece(0, YutResult.GEOL, game.getBoard().getTotalCells(), game.getBoard());
+
+                    // player1 캡처
+                    player1.movePiece(0, YutResult.GEOL, game.getBoard().getTotalCells(), game.getBoard());
+                    boolean captured = game.processPieceLanding(player1.getPieces().get(0), player1);
+
+                    assertTrue(captured, "캡처 발생");
+
+                    controller.applyPendingResults();
+                    assertSame(player1, game.getCurrentPlayer());
+                }
+
+
+                @Test
+                @DisplayName("캡처된 말 상태 확인(위치 0, 미완주, 미그룹 상태_")
+                void testCapturedPieceState() {
+                    Game game = new Game(new Board(BoardShape.HEXAGON));
+                    game.addPlayer(player1);
+                    game.addPlayer(player2);
+
+                    // player2 말을 그룹핑 상태로 만들기
+                    player2.movePiece(0, YutResult.MO, game.getBoard().getTotalCells(), game.getBoard());
+                    player2.movePiece(1, YutResult.MO, game.getBoard().getTotalCells(), game.getBoard());
+                    game.processPieceLanding(player2.getPieces().get(1), player2);
+
+                    // 캡처 전 상태 확인
+                    assertTrue(player2.getPieces().get(0).isGrouped(), "캡처 전 그룹 상태");
+                    assertEquals(5, player2.getPieces().get(0).getPosition(), "캡처 전 위치");
+
+                    // player1이 캡처
+                    player1.movePiece(0, YutResult.MO, game.getBoard().getTotalCells(), game.getBoard());
+                    game.processPieceLanding(player1.getPieces().get(0), player1);
+
+                    // 캡처 후 상태 확인
+                    assertEquals(0, player2.getPieces().get(0).getPosition(), "캡처 후 위치 0");
+                    assertFalse(player2.getPieces().get(0).isFinished(), "캡처 후 미완주");
+                    assertFalse(player2.getPieces().get(0).isGrouped(), "캡처 후 미그룹");
+                    assertEquals(0, player2.getPieces().get(1).getPosition(), "그룹 말도 위치 0");
+                    assertFalse(player2.getPieces().get(1).isGrouped(), "그룹 말도 미그룹");
+                }
+            }
+        }
+
+
+        @Nested
+        @DisplayName("말 완주 테스트")
+        class PieceCompletionTest {
+
+            @Test
+            @DisplayName("완주 위치: 완주 시 위치 0")
+            void testCompletionPosition() {
+                Board board = new Board(BoardShape.SQUARE);
+                Piece piece = new Piece();
+
+                // 외곽 경로로 완주 (꼭짓점 피해서 이동)
+                piece.move(4, board); // 위치 4
+                piece.move(4, board); // 위치 8
+                piece.move(4, board); // 위치 12
+                piece.move(4, board); // 위치 16
+                piece.move(4, board); // 위치 20 (완주)
+                assertTrue(piece.isFinished(), "완주 상태");
+                assertEquals(0, piece.getPosition(), "완주 시 위치 0");
+
+                // FINAL 경로로 완주
+                Piece piece2 = new Piece();
+                piece2.move(5, board); // 5번 꼭짓점
+                piece2.move(3, board); // 중앙
+                piece2.move(3, board); // FINAL 3단계 완주
+                assertTrue(piece2.isFinished(), "FINAL 경로 완주");
+                assertEquals(0, piece2.getPosition(), "FINAL 완주 시 위치 0");
+            }
+
+            @Test
+            @DisplayName("그룹 후 완주 여부 테스트")
+            void testGroupCompletionSync() {
+                Game game = new Game(new Board(BoardShape.PENTAGON));
+                game.addPlayer(player1);
+
+                // 3개 말 그룹 생성
+                for (int i = 0; i < 3; i++) {
+                    player1.movePiece(i, YutResult.MO, game.getBoard().getTotalCells(), game.getBoard());
+                    if (i > 0) {
+                        game.processPieceLanding(player1.getPieces().get(i), player1);
+                    }
+                }
+
+                // 그룹 상태 확인
+                assertTrue(player1.getPieces().get(0).isGrouped(), "말 0 그룹");
+                assertTrue(player1.getPieces().get(1).isGrouped(), "말 1 그룹");
+                assertTrue(player1.getPieces().get(2).isGrouped(), "말 2 그룹");
+
+                // 주도 말을 FINAL 경로로 완주
+                player1.movePiece(0, YutResult.GEOL, game.getBoard().getTotalCells(), game.getBoard()); // 중앙
+                player1.movePiece(0, YutResult.GEOL, game.getBoard().getTotalCells(), game.getBoard()); // 완주
+
+                game.processPieceLanding(player1.getPieces().get(0), player1);
+
+                // 연동 완주 확인
+                assertTrue(player1.getPieces().get(0).isFinished(), "주도 말 완주");
+                assertTrue(player1.getPieces().get(1).isFinished(), "연동 말 1 완주");
+                assertTrue(player1.getPieces().get(2).isFinished(), "연동 말 2 완주");
+
+                assertEquals(0, player1.getPieces().get(0).getPosition(), "말 0 완주 위치");
+                assertEquals(0, player1.getPieces().get(1).getPosition(), "말 1 완주 위치");
+                assertEquals(0, player1.getPieces().get(2).getPosition(), "말 2 완주 위치");
+            }
+        }
+    }
+    static class DummyGameView implements GameView {
+        public void setController(GameController c) {
+        }
+
+        public void showMessage(String m) {
+        }
+
+        public void updateBoard(Game g) {
+        }
+
+        public String showInputDialog(String msg) {
+            return "1";
+        }
+
+        public int showOptionDialog(String msg, String title, String[] options, String initial) {
+            return 0;
+        }
+
+        public void resetBoard() {
+        }
+}}
