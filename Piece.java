@@ -1,4 +1,4 @@
-package com.example.yutgame;
+package com.example.javafxyut;
 
 public class Piece {
     public enum MovementRoute {
@@ -37,6 +37,8 @@ public class Piece {
     }
     public boolean isFinished() { return finished; }
     public boolean isGrouped() { return grouped; }
+    public void setFinished(boolean finished) { this.finished = finished; }
+
 
     public void capture(Piece opponent) { opponent.reset(); }
     public void groupWith(Piece other) { this.grouped = true; other.grouped = true; }
@@ -252,24 +254,25 @@ public class Piece {
             if (branchAccumulated == -1) {
                 position = branchStart - 1;
                 route = MovementRoute.OUTER;
-                return;
+            } else if (steps < 0 && branchAccumulated == 0) {
+                position = branchStart;
             } else if (branchAccumulated == 1) {
                 position = getFirstBranchCell(shape, branchStart);
-                return;
+
             } else if (branchAccumulated == 2) {
                 position = getSecondBranchCell(shape, branchStart);
-                return;
+
             } else if (branchAccumulated == 3) {
                 position = getCenterCellIndex(shape);
                 route = MovementRoute.FINAL;
                 branchAccumulated = 0;
-                return;
+
             } else if (branchAccumulated == 4) {
                 position = getThirdBranchCell(shape, branchStart);
-                return;
+
             } else if (branchAccumulated == 5) {
                 position = getForthBranchCell(shape, branchStart);
-                return;
+
             } else {
                 if ((shape == BoardShape.SQUARE && branchStart == 10) ||
                         (shape == BoardShape.HEXAGON && branchStart == 15)) {
@@ -279,7 +282,6 @@ public class Piece {
                     route = MovementRoute.OUTER;
                 }
                 branchAccumulated = 0;
-                return;
             }
         }
     }
