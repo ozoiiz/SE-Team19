@@ -1,4 +1,4 @@
-package com.example.yutgame;
+package com.example.javafxyut;
 
 import java.util.Random;
 
