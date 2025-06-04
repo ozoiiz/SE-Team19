@@ -1,4 +1,4 @@
-package com.example.yutgame;
+package com.example.javafxyut;
 
 public enum YutResult {
     BACKDO(-1, false),  // 백도: 1칸 후퇴
